@@ -1,7 +1,7 @@
 services:
   game-interface:
     build:
-      context: .
+      context: ../ZombieProjectInterface
       dockerfile: Dockerfile
     container_name: zombie-game-interface
     image: zombie-game-interface:latest
