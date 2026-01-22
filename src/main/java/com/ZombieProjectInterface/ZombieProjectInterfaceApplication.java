@@ -1,13 +1,13 @@
 package com.ZombieProjectInterface;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import com.ZombieProjectInterface.entity.ZombieClient;
 
-@SpringBootApplication
 public class ZombieProjectInterfaceApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(ZombieProjectInterfaceApplication.class, args);
+	public static void main(String[] args) throws Exception  {
+		ZombieClient client = new ZombieClient();
+        client.start();
+
 	}
 
 }
