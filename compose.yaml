@@ -1,0 +1,19 @@
+services:
+  game-interface:
+    build:
+      context: ../ZombieProjectInterface
+      dockerfile: Dockerfile
+    container_name: zombie-game-interface
+    image: zombie-game-interface:latest
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - GAME_SERVICE_URL=http://zombie-game-service:8080
+    networks:
+      - spring-network
+
+networks:
+  spring-network:
+    name: spring-network
+    external: true
