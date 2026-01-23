@@ -28,18 +28,46 @@ public class ZombieClient {
     private void runCLILoop() throws Exception{
         while(true) {
             System.out.print("> ");
-            String input = scanner.nextLine();
+            String input = scanner.nextLine().trim();
 
-            if (input.equalsIgnoreCase("quit")) break;
+            if (input.equalsIgnoreCase("start")) {
+                showScene();
+                continue;
+            }
+
             if (input.equalsIgnoreCase("restart")) {
                 restart();
                 continue;
             }
+
             if (input.equalsIgnoreCase("inv")) {
                 inventory();
                 continue;
             }
-            executeChoice(input);
+
+            if (input.equalsIgnoreCase("help")) {
+                System.out.println("""
+                        ---List of valid commands---
+                        help: display this list
+                        start: start the game
+                        restart: restart the game
+                        inv: show inventory contents
+                        1 - 9: make a choice
+                        quit - quit the game
+                        """);
+                continue;
+            }
+
+            if (input.matches("[1-9]")) {
+                executeChoice(input);
+                continue;
+            }
+
+            if (input.equalsIgnoreCase("quit")) {
+                break;
+            }
+
+            System.out.println("Please input a valid command. Type 'help' to see all commands.");
         }
     }
 
