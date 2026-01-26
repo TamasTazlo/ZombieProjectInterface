@@ -1,4 +1,7 @@
-package com.ZombieProjectInterface.entity;
+package com.ZombieProjectInterface.service;
+
+import com.ZombieProjectInterface.entity.SceneDTO;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -7,6 +10,7 @@ import java.net.http.HttpResponse;
 import java.util.Scanner;
 
 public class ZombieClient {
+    private final ObjectMapper objectMapper = new ObjectMapper();
     private static final String BASE_URL =
             System.getenv().getOrDefault(
                     "GAME_SERVICE_URL",
@@ -21,7 +25,7 @@ public class ZombieClient {
         System.out.println("BASE_URL = " + BASE_URL);
 
         waitForBackend();
-        showScene();
+        fetchScene();
         runCLILoop();
     }
 
@@ -31,7 +35,7 @@ public class ZombieClient {
             String input = scanner.nextLine().trim();
 
             if (input.equalsIgnoreCase("start")) {
-                showScene();
+                fetchScene();
                 continue;
             }
 
@@ -59,11 +63,12 @@ public class ZombieClient {
             }
 
             if (input.matches("[1-9]")) {
-                executeChoice(input);
+                executeOption(input);
                 continue;
             }
 
             if (input.equalsIgnoreCase("quit")) {
+                System.out.println("Thanks for playing!");
                 break;
             }
 
@@ -86,23 +91,44 @@ public class ZombieClient {
         }
     }
 
-    private void showScene() throws Exception{
-        sendGet("/game");
+    private void fetchScene() throws Exception{
+        SceneDTO scene = sendGet("/game");
+        displayScene(scene);
     }
 
-    private void executeChoice(String option) throws Exception {
-        sendGet("/game/" + option);
+    private void displayScene(SceneDTO scene) {
+        System.out.println("\n" + "=".repeat(60));
+        System.out.println("SCENE: " + scene.getName());
+        System.out.println("=".repeat(60));
+        System.out.println(scene.getDescription());
+
+        if (scene.getOptions() != null && !scene.getOptions().isEmpty()) {
+            System.out.println("\n" + "-".repeat(60));
+            System.out.println("OPTIONS:");
+            scene.getOptions().forEach((key, value) ->
+                    System.out.println("  [" + key + "] " + value)
+            );
+            System.out.println("-".repeat(60));
+        }
+        System.out.println();
+    }
+
+    private void executeOption(String option) throws Exception {
+        SceneDTO scene = sendGet("/game/" + option);
+        displayScene(scene);
     }
 
     private void inventory() throws Exception{
-        sendGet("/game/inv");
+        SceneDTO scene = sendGet("/game/inv");
+        displayScene(scene);
     }
 
     private void restart() throws Exception {
         sendPost("/game/restart");
+        fetchScene();
     }
 
-    private void sendGet(String path) throws Exception {
+    private SceneDTO sendGet(String path) throws Exception {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(BASE_URL + path))
                 .GET()
@@ -111,7 +137,7 @@ public class ZombieClient {
         HttpResponse<String> response =
                 client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        System.out.println(response.body());
+        return objectMapper.readValue(response.body(), SceneDTO.class);
     }
 
     private void sendPost(String path) throws Exception {
@@ -122,7 +148,5 @@ public class ZombieClient {
 
         HttpResponse<String> response =
                 client.send(request, HttpResponse.BodyHandlers.ofString());
-
-        System.out.println(response.body());
     }
 }

@@ -1,6 +1,6 @@
 package com.ZombieProjectInterface;
 
-import com.ZombieProjectInterface.entity.ZombieClient;
+import com.ZombieProjectInterface.service.ZombieClient;
 
 public class ZombieProjectInterfaceApplication {
 
