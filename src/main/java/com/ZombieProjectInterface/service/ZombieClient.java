@@ -27,7 +27,18 @@ public class ZombieClient {
         System.out.println("BASE_URL = " + BASE_URL);
 
         waitForBackend();
-        fetchScene();
+        System.out.println("""
+                In order to start the game, run 'docker attach zombie-game-interface' in a terminal and enter 'start'
+                        ============================================================
+                        List of valid commands
+                        ============================================================
+                        help: display this list
+                        start: start the game
+                        restart: restart the game
+                        inv: show inventory contents
+                        quit - quit the game
+                        ============================================================
+                """);
         runCLILoop();
     }
 
@@ -53,13 +64,16 @@ public class ZombieClient {
 
             if (input.equalsIgnoreCase("help")) {
                 System.out.println("""
-                        ---List of valid commands---
+                        ============================================================
+                        List of valid commands
+                        ============================================================
                         help: display this list
                         start: start the game
                         restart: restart the game
                         inv: show inventory contents
                         1 - 9: make a choice
                         quit - quit the game
+                        ============================================================
                         """);
                 continue;
             }
