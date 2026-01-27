@@ -1,12 +1,14 @@
 package com.ZombieProjectInterface.service;
 
 import com.ZombieProjectInterface.entity.SceneDTO;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.Map;
 import java.util.Scanner;
 
 public class ZombieClient {
@@ -80,7 +82,7 @@ public class ZombieClient {
         System.out.println("Waiting for backend...");
         while(true) {
             try {
-                sendGet("/game");
+                sendGetScene("/game");
                 System.out.println("Backend is ready!");
                 return;
             } catch (Exception e) {
@@ -92,7 +94,7 @@ public class ZombieClient {
     }
 
     private void fetchScene() throws Exception{
-        SceneDTO scene = sendGet("/game");
+        SceneDTO scene = sendGetScene("/game");
         displayScene(scene);
     }
 
@@ -114,13 +116,23 @@ public class ZombieClient {
     }
 
     private void executeOption(String option) throws Exception {
-        SceneDTO scene = sendGet("/game/" + option);
+        SceneDTO scene = sendGetScene("/game/" + option);
         displayScene(scene);
     }
 
     private void inventory() throws Exception{
-        SceneDTO scene = sendGet("/game/inv");
-        displayScene(scene);
+        String jsonString = sendGet("/game/inv");
+        ObjectMapper mapper = new ObjectMapper();
+        Map<String, Integer> inventory = mapper.readValue(jsonString,
+                new TypeReference<Map<String, Integer>>(){});
+
+        System.out.println("\n" + "=".repeat(60));
+        System.out.println("INVENTORY");
+        System.out.println("=".repeat(60));
+        inventory.forEach((key, value) ->
+                System.out.println(key + ": " + value)
+        );
+        System.out.println("=".repeat(60) + "\n");
     }
 
     private void restart() throws Exception {
@@ -128,7 +140,7 @@ public class ZombieClient {
         fetchScene();
     }
 
-    private SceneDTO sendGet(String path) throws Exception {
+    private SceneDTO sendGetScene(String path) throws Exception {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(BASE_URL + path))
                 .GET()
@@ -138,6 +150,18 @@ public class ZombieClient {
                 client.send(request, HttpResponse.BodyHandlers.ofString());
 
         return objectMapper.readValue(response.body(), SceneDTO.class);
+    }
+
+    private String sendGet(String path) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(BASE_URL + path))
+                .GET()
+                .build();
+
+        HttpResponse<String> response =
+                client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        return response.body();
     }
 
     private void sendPost(String path) throws Exception {
