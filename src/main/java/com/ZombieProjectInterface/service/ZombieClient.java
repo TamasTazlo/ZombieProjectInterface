@@ -126,9 +126,13 @@ public class ZombieClient {
         Map<String, Integer> inventory = mapper.readValue(jsonString,
                 new TypeReference<Map<String, Integer>>(){});
 
+        System.out.println("\n" + "=".repeat(60));
+        System.out.println("INVENTORY");
+        System.out.println("=".repeat(60));
         inventory.forEach((key, value) ->
                 System.out.println(key + ": " + value)
         );
+        System.out.println("=".repeat(60) + "\n");
     }
 
     private void restart() throws Exception {
