@@ -4,6 +4,7 @@ import com.ZombieProjectInterface.entity.SceneDTO;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.io.PrintStream;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -12,22 +13,37 @@ import java.util.Map;
 import java.util.Scanner;
 
 public class ZombieClient {
-    private final ObjectMapper objectMapper = new ObjectMapper();
-    private static final String BASE_URL =
-            System.getenv().getOrDefault(
-                    "GAME_SERVICE_URL",
-                    "http://localhost:8080"
-            );
+    private final ObjectMapper objectMapper;
+    private final String baseUrl;
+    private final HttpClient client;
+    private final Scanner scanner;
+    private final PrintStream out;
 
-    private final HttpClient client = HttpClient.newHttpClient();
-    private final Scanner scanner = new Scanner(System.in);
+    public ZombieClient() {
+        this(
+            HttpClient.newHttpClient(),
+            new Scanner(System.in),
+            System.out,
+            new ObjectMapper(),
+            System.getenv().getOrDefault("GAME_SERVICE_URL", "http://localhost:8080")
+        );
+    }
+
+    public ZombieClient(HttpClient client, Scanner scanner, PrintStream out,
+                        ObjectMapper objectMapper, String baseUrl) {
+        this.client = client;
+        this.scanner = scanner;
+        this.out = out;
+        this.objectMapper = objectMapper;
+        this.baseUrl = baseUrl;
+    }
 
     public void start() throws Exception {
-        System.out.println("CLI started");
-        System.out.println("BASE_URL = " + BASE_URL);
+        out.println("CLI started");
+        out.println("baseUrl = " + baseUrl);
 
         waitForBackend();
-        System.out.println("""
+        out.println("""
                 In order to start the game, run 'docker attach zombie-game-interface' in a terminal and enter 'start'
                         ============================================================
                         List of valid commands
@@ -44,7 +60,7 @@ public class ZombieClient {
 
     private void runCLILoop() throws Exception{
         while(true) {
-            System.out.print("> ");
+            out.print("> ");
             String input = scanner.nextLine().trim();
 
             if (input.equalsIgnoreCase("start")) {
@@ -63,7 +79,7 @@ public class ZombieClient {
             }
 
             if (input.equalsIgnoreCase("help")) {
-                System.out.println("""
+                out.println("""
                         ============================================================
                         List of valid commands
                         ============================================================
@@ -84,20 +100,20 @@ public class ZombieClient {
             }
 
             if (input.equalsIgnoreCase("quit")) {
-                System.out.println("Thanks for playing!");
+                out.println("Thanks for playing!");
                 break;
             }
 
-            System.out.println("Please input a valid command. Type 'help' to see all commands.");
+            out.println("Please input a valid command. Type 'help' to see all commands.");
         }
     }
 
     private void waitForBackend() throws Exception{
-        System.out.println("Waiting for backend...");
+        out.println("Waiting for backend...");
         while(true) {
             try {
                 sendGetScene("/game");
-                System.out.println("Backend is ready!");
+                out.println("Backend is ready!");
                 return;
             } catch (Exception e) {
                 try {
@@ -113,20 +129,20 @@ public class ZombieClient {
     }
 
     private void displayScene(SceneDTO scene) {
-        System.out.println("\n" + "=".repeat(60));
-        System.out.println("SCENE: " + scene.getName());
-        System.out.println("=".repeat(60));
-        System.out.println(scene.getDescription());
+        out.println("\n" + "=".repeat(60));
+        out.println("SCENE: " + scene.getName());
+        out.println("=".repeat(60));
+        out.println(scene.getDescription());
 
         if (scene.getOptions() != null && !scene.getOptions().isEmpty()) {
-            System.out.println("\n" + "-".repeat(60));
-            System.out.println("OPTIONS:");
+            out.println("\n" + "-".repeat(60));
+            out.println("OPTIONS:");
             scene.getOptions().forEach((key, value) ->
-                    System.out.println("  [" + key + "] " + value)
+                    out.println("  [" + key + "] " + value)
             );
-            System.out.println("-".repeat(60));
+            out.println("-".repeat(60));
         }
-        System.out.println();
+        out.println();
     }
 
     private void executeOption(String option) throws Exception {
@@ -140,13 +156,13 @@ public class ZombieClient {
         Map<String, Integer> inventory = mapper.readValue(jsonString,
                 new TypeReference<Map<String, Integer>>(){});
 
-        System.out.println("\n" + "=".repeat(60));
-        System.out.println("INVENTORY");
-        System.out.println("=".repeat(60));
+        out.println("\n" + "=".repeat(60));
+        out.println("INVENTORY");
+        out.println("=".repeat(60));
         inventory.forEach((key, value) ->
-                System.out.println(key + ": " + value)
+                out.println(key + ": " + value)
         );
-        System.out.println("=".repeat(60) + "\n");
+        out.println("=".repeat(60) + "\n");
     }
 
     private void restart() throws Exception {
@@ -156,7 +172,7 @@ public class ZombieClient {
 
     private SceneDTO sendGetScene(String path) throws Exception {
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(BASE_URL + path))
+                .uri(URI.create(baseUrl + path))
                 .GET()
                 .build();
 
@@ -168,7 +184,7 @@ public class ZombieClient {
 
     private String sendGet(String path) throws Exception {
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(BASE_URL + path))
+                .uri(URI.create(baseUrl + path))
                 .GET()
                 .build();
 
@@ -180,7 +196,7 @@ public class ZombieClient {
 
     private void sendPost(String path) throws Exception {
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(BASE_URL + path))
+                .uri(URI.create(baseUrl + path))
                 .POST(HttpRequest.BodyPublishers.noBody())
                 .build();
 
